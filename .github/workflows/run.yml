@@ -3,31 +3,33 @@ name: 刷步数
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
   schedule:
-    - cron: 0 10 * * *
-  watch:
-    types: started
+    - cron: '0 10 * * *'
+
+permissions:
+  contents: read
+
+env:
+  TZ: Asia/Shanghai
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: 初始化Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v7
         with:
-          python-version: 3.7
+          python-version: '3.12'
       - name: 开始
+        env:
+          PUSH_MODE: ${{ secrets.PMODE }}
+          PUSH_KEY: ${{ secrets.PKEY }}
+          MI_USER: ${{ secrets.USER }}
+          MI_PASSWORD: ${{ secrets.PWD }}
+          MI_STEP: ${{ secrets.STEP }}
         run: |
-          pip install requests
-          pmode='${{ secrets.PMODE }}'
-          pkey='${{ secrets.PKEY }}'
-          user='${{ secrets.USER }}'
-          pwd='${{ secrets.PWD }}'
-          step='${{ secrets.STEP }}'
-
-          python3 main.py ${pmode} ${pkey} ${user} ${pwd} ${step}
+          python -m pip install requests
+          python main.py "$PUSH_MODE" "$PUSH_KEY" "$MI_USER" "$MI_PASSWORD" "$MI_STEP"
