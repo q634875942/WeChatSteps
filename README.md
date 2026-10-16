@@ -15,6 +15,8 @@
 - 关闭通知：`PMODE` 和 `PKEY` Secrets 均设置为 `off`。
 - 账号和密码分别保存在 `USER`、`PWD` Secrets 中。
 - 使用 Python 3.12；支持定时、推送到 `main` 和手动触发运行。
+- 登录支持 Zepp Life 邮箱和手机号，使用新版加密登录接口；登录失败会使任务失败。
+- 登录适配参考 [TonyJiangWJ/mimotion](https://github.com/TonyJiangWJ/mimotion)；依赖见 `requirements.txt`。
 
 ### 一、Fork 此仓库
 
@@ -33,7 +35,7 @@
 | -------- | ----- |
 | PMODE |   推送模式,server酱推送:`wx` 新server酱推送:`nwx` tg推送:`tg` 企业微信推送:`qwx` PushPlus推送:`pp` 关闭推送:`off`|
 | PKEY |   推送key,详见PKEY参数解释|
-| USER |   账号,仅支持手机号|
+| USER |   Zepp Life 账号，支持手机号或邮箱|
 | PWD |   密码|
 | STEP |   步数:0则为1w-2w之间随机,自定义随机范围: `18000-25000`|
 

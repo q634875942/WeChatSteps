@@ -6,13 +6,13 @@
 
 import json
 import random
-import re
-import json
 import sys
 import time
-from urllib.parse import quote
+from urllib.parse import parse_qs, quote, urlencode, urlparse
 
 import requests
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
 
 now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 headers = {
@@ -24,47 +24,79 @@ def get_code(location):
     """
     获取登录code
     """
-    code_pattern = re.compile("(?<=access=).*?(?=&)")
-    code = code_pattern.findall(location)[0]
-    return code
+    return parse_qs(urlparse(location).query).get("access", [""])[0]
 
 
 def login(_user, password):
     """
     登录
     """
-    url1 = "https://api-user.huami.com/registrations/+86" + _user + "/tokens"
+    is_email = "@" in _user
+    account = _user if is_email or _user.startswith("+86") else "+86" + _user
+    url1 = "https://api-user.zepp.com/v2/registrations/tokens"
     _headers = {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        "User-Agent": "MiFit/4.6.0 (iPhone; iOS 14.0.1; Scale/2.00)"
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "User-Agent": "MiFit6.14.0 (M2007J1SC; Android 12; Density/2.75)",
+        "app_name": "com.xiaomi.hm.health",
+        "appname": "com.xiaomi.hm.health",
+        "appplatform": "android_phone",
+        "x-hm-ekv": "1",
+        "hm-privacy-ceip": "false",
     }
     data1 = {
+        "emailOrPhone": account,
+        "password": password,
+        "state": "REDIRECTION",
         "client_id": "HuaMi",
-        "password": f"{password}",
+        "country_code": "CN",
         "redirect_uri": "https://s3-us-west-2.amazonaws.com/hm-registration/successsignin.html",
         "token": "access"
     }
-    r1 = requests.post(url1, data=data1, headers=_headers, allow_redirects=False)
-    try:
-        location = r1.headers["Location"]
-        code = get_code(location)
-    except:
+    # Zepp Life 传输协议；参考 TonyJiangWJ/mimotion 的 util/zepp_helper.py。
+    cipher = AES.new(b"xeNtBVqzDc6tuNTh", AES.MODE_CBC, b"MAAAYAAAAAAAAABg")
+    encrypted_data = cipher.encrypt(pad(urlencode(data1).encode(), AES.block_size))
+    r1 = requests.post(
+        url1, data=encrypted_data, headers=_headers, allow_redirects=False, timeout=20
+    )
+    location = r1.headers.get("Location", "")
+    code = get_code(location)
+    if not code:
+        error = parse_qs(urlparse(location).query).get("error", [str(r1.status_code)])[0]
+        print(f"登录接口拒绝请求，错误码：{error}")
         return 0, 0
     # print("access_code获取成功！")
     # print(code)
 
     url2 = "https://account.huami.com/v2/client/login"
+    # 此请求发送普通表单，不携带要求加密响应的 x-hm-ekv。
+    login_headers = {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "app_name": "com.xiaomi.hm.health",
+        "appname": "com.xiaomi.hm.health",
+        "appplatform": "android_phone",
+        "accept-language": "zh-CN",
+        "cv": "50818_6.14.0",
+        "v": "2.0",
+    }
     data2 = {
         "app_name": "com.xiaomi.hm.health",
-        "app_version": "4.6.0",
+        "app_version": "6.14.0",
         "code": f"{code}",
         "country_code": "CN",
         "device_id": "2C8B4939-0CCD-4E94-8CBA-CB8EA6E613A1",
-        "device_model": "phone",
+        "device_model": "android_phone" if is_email else "phone",
         "grant_type": "access_token",
-        "third_name": "huami_phone",
+        "third_name": "email" if is_email else "huami_phone",
     }
-    r2 = requests.post(url2, data=data2, headers=_headers).json()
+    if is_email:
+        data2.update({
+            "allow_registration": "false",
+            "dn": "account.zepp.com,api-user.zepp.com,api-mifit.zepp.com,api-watch.zepp.com,app-analytics.zepp.com,api-analytics.huami.com,auth.zepp.com",
+            "lang": "zh_CN",
+            "os_version": "1.5.0",
+            "source": "com.xiaomi.hm.health:6.14.0:50818",
+        })
+    r2 = requests.post(url2, data=data2, headers=login_headers, timeout=20).json()
     login_token = r2["token_info"]["login_token"]
     # print("login_token获取成功！")
     # print(login_token)
@@ -92,7 +124,7 @@ def main(_user, _passwd, _step):
     login_token, userid = login(_user, password)
     if login_token == 0:
         print("登陆失败！")
-        return "login fail!"
+        sys.exit(1)
 
     t = get_time()
 
@@ -308,10 +340,7 @@ def get_time():
     """
     获取时间戳
     """
-    url = 'http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp'
-    response = requests.get(url, headers=headers).json()
-    t = response['data']['t']
-    return t
+    return str(int(time.time() * 1000))
 
 
 def get_app_token(login_token):

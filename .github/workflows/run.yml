@@ -23,6 +23,10 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: '3.12'
+      - name: 安装依赖并检查登录协议
+        run: |
+          python -m pip install -r requirements.txt
+          python -m unittest -v
       - name: 开始
         env:
           PUSH_MODE: ${{ secrets.PMODE }}
@@ -31,5 +35,4 @@ jobs:
           MI_PASSWORD: ${{ secrets.PWD }}
           MI_STEP: ${{ secrets.STEP }}
         run: |
-          python -m pip install requests
           python main.py "$PUSH_MODE" "$PUSH_KEY" "$MI_USER" "$MI_PASSWORD" "$MI_STEP"
