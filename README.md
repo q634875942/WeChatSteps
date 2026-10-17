@@ -14,7 +14,7 @@
 - 随机步数范围：11000～15000，`STEP` Secret 设置为 `11000-15000`。
 - 关闭通知：`PMODE` 和 `PKEY` Secrets 均设置为 `off`。
 - 账号和密码分别保存在 `USER`、`PWD` Secrets 中。
-- 使用 Python 3.12；支持定时、推送到 `main` 和手动触发运行。
+- 使用 Python 3.12；支持定时和手动触发运行，提交配置不会上传步数。
 - 登录支持 Zepp Life 邮箱和手机号，使用新版加密登录接口；登录失败会使任务失败。
 - 登录适配参考 [TonyJiangWJ/mimotion](https://github.com/TonyJiangWJ/mimotion)；依赖见 `requirements.txt`。
 
