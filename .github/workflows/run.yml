@@ -3,9 +3,8 @@ name: 刷步数
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 18 * * *'
-      timezone: Asia/Shanghai
-    - cron: '3-58/5 * * * *'
+    - cron: '0 10 * * *'
+    - cron: '3 14 17 10 *'
 
 permissions:
   contents: read
@@ -15,14 +14,14 @@ env:
 
 jobs:
   schedule-check:
-    if: github.event_name == 'schedule' && github.event.schedule == '3-58/5 * * * *'
+    if: github.event_name == 'schedule' && github.event.schedule == '3 14 17 10 *'
     runs-on: ubuntu-latest
     steps:
       - name: 验证自动调度（不上传步数）
         run: date -u
 
   build:
-    if: github.event_name != 'schedule' || github.event.schedule != '3-58/5 * * * *'
+    if: github.event_name != 'schedule' || github.event.schedule != '3 14 17 10 *'
     runs-on: ubuntu-latest
 
     steps:

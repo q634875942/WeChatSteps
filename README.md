@@ -10,7 +10,7 @@
 
 ### 本仓库配置
 
-- 每天北京时间 18:00 运行（`cron: '0 18 * * *'`，`timezone: Asia/Shanghai`）。
+- 每天北京时间 18:00 运行（UTC `0 10 * * *`）。
 - 随机步数范围：11000～15000，`STEP` Secret 设置为 `11000-15000`。
 - 关闭通知：`PMODE` 和 `PKEY` Secrets 均设置为 `off`。
 - 账号和密码分别保存在 `USER`、`PWD` Secrets 中。
