@@ -1,0 +1,22 @@
+name: 定时调度诊断
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/scheduler-diagnostic.yml'
+  schedule:
+    - cron: '*/5 * * * *'
+
+permissions: {}
+
+jobs:
+  clock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 记录触发事件和 UTC 时间
+        env:
+          TRIGGER_EVENT: ${{ github.event_name }}
+        run: |
+          printf 'event=%s\n' "$TRIGGER_EVENT"
+          date -u
