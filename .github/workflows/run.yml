@@ -3,7 +3,8 @@ name: 刷步数
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '45 19 * * *'
+      timezone: 'Asia/Shanghai'
 
 permissions:
   contents: read
